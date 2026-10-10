@@ -2027,6 +2027,7 @@ button.btn-danger.armed{background:#c91b1b!important;color:#fff!important}
       <li><a href="#notices">고시·공고</a></li>
       <li><a href="#history">기관 연혁</a></li>
       <li><a href="#faq">민원·참여</a></li>
+      <li><a href="#" data-admin="1">관리자</a></li>
     </ul>
 
     <div class="gnb-actions">
@@ -2562,7 +2563,7 @@ button.btn-danger.armed{background:#c91b1b!important;color:#fff!important}
     <!-- 하단 패러디 공지 배너 -->
     <div class="footer-bottom-notice">
       <span>※ 본 누리집은 창작된 가상 행정 체계 관련 패러디 기관 웹사이트이며, 실제 정부나 기관, 단체와는 일절 무관합니다.</span>
-      <span>시스템 관리: 이음중앙관리국 총괄기획과 전산운영팀 · v2.3.0-GOV</span>
+      <span>시스템 관리: 이음중앙관리국 총괄기획과 전산운영팀 · v2.3.1-GOV</span>
     </div>
   </div>
 </footer>
@@ -3534,7 +3535,7 @@ $('modalBody').addEventListener('change', e => {
     if (c) { c.status = e.target.value; saveCivil(list); toast('처리상태가 변경되었습니다.'); renderAdminList(); }
   }
 });
-document.querySelector('.footer-policy-links').addEventListener('click', e => {
+document.addEventListener('click', e => {
   if (e.target.closest('[data-admin]')) { e.preventDefault(); openAdmin(); }
 });
 </script>
