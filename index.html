@@ -3179,7 +3179,7 @@ function deleteCivil(no) {
    주의: 정적 사이트(GitHub Pages)라서 아래 비밀번호 확인은 화면을 가리는 정도의 보호일 뿐 보안 장치가 아닙니다.
    또한 민원은 접수한 사람의 브라우저에만 저장되므로, 관리자 화면에는 "이 브라우저"에 저장된 민원만 보입니다.
    기본 비밀번호는 ieum-admin 입니다. 반드시 바꾸세요: 관리자 화면 하단 "비밀번호 해시 만들기"로 해시를 만든 뒤 아래 값에 붙여넣습니다. */
-const ADMIN_PW_SHA256 = 'cbb1af29d56b332c57cf41a6e48764c8dc52cdecf9c8128f076899e64d53698e';
+const ADMIN_PW_SHA256 = '4a65d874a5cbe25286e5d5d6db3ce24fc06c9d99eef619718fe839941cecc39c';
 async function sha256Hex(text) {
   if (!(window.crypto && crypto.subtle)) return null;
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
