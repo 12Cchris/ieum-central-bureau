@@ -1767,6 +1767,22 @@ button.law-article-header{width:100%;border:none;font:inherit;text-align:left}
 .modal-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
 .modal-actions button{padding:8px 14px;border-radius:6px;border:1px solid var(--gov-navy);background:#fff;color:var(--gov-navy);font-weight:700;font-size:0.8125rem}
 .modal-actions button:hover{background:var(--gov-blue-subtle)}
+.gov-modal-card.wide{max-width:980px}
+.row-actions{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.row-actions button,.adm-toolbar button{padding:5px 11px;border-radius:6px;border:1px solid var(--gov-navy);background:#fff;color:var(--gov-navy);font-weight:700;font-size:0.75rem}
+.row-actions button:hover,.adm-toolbar button:hover{background:var(--gov-blue-subtle)}
+button.btn-danger{border-color:#c91b1b!important;color:#c91b1b!important}
+button.btn-danger:hover{background:#fdecec!important}
+button.btn-danger.armed{background:#c91b1b!important;color:#fff!important}
+.adm-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0}
+.adm-toolbar input,.adm-toolbar select{border:1px solid var(--gov-border);border-radius:6px;padding:6px 9px;font:inherit;font-size:0.8125rem;background:#fff}
+.adm-toolbar input[type=search]{flex:1;min-width:150px}
+.adm-note{font-size:0.75rem;color:#64748b;line-height:1.6;background:#f8fafc;border:1px solid var(--gov-border);border-radius:6px;padding:8px 10px;margin:8px 0}
+.lookup-row details{margin-top:6px}
+.lookup-row summary{cursor:pointer;color:#1d4ed8;font-weight:700}
+.lookup-body{white-space:pre-wrap;word-break:break-word;background:#f8fafc;border-radius:6px;padding:8px 10px;margin-top:6px}
+.status-chip{display:inline-block;padding:1px 8px;border-radius:10px;background:#e8f0fe;color:#0d4b8f;font-weight:700;font-size:0.75rem}
+.adm-row select{padding:3px 6px;border:1px solid var(--gov-border);border-radius:5px;font:inherit;font-size:0.75rem}
 .lookup-row{border:1px solid var(--gov-border);border-radius:6px;padding:10px 12px;margin-top:8px;font-size:0.8125rem;line-height:1.6}
 .lookup-row b{color:var(--gov-blue)}
 .res-sec h4{color:var(--gov-navy);margin:14px 0 6px}
@@ -2485,12 +2501,12 @@ button.law-article-header{width:100%;border:none;font:inherit;text-align:left}
 
             <div class="form-group">
               <label class="form-label" for="civilTitle">민원 제목 <span style="color:red;">*</span></label>
-              <input type="text" class="form-input" id="civilTitle" placeholder="예: 신규 위원회 설치 문의" required>
+              <input type="text" class="form-input" id="civilTitle" placeholder="예: 신규 위원회 설치 문의" maxlength="100" required>
             </div>
 
             <div class="form-group">
               <label class="form-label" for="civilContent">민원 내용 <span style="color:red;">*</span></label>
-              <textarea class="form-textarea" id="civilContent" rows="4" placeholder="민원 취지와 구체적인 내용을 입력해 주십시오." required></textarea>
+              <textarea class="form-textarea" id="civilContent" rows="4" placeholder="민원 취지와 구체적인 내용을 입력해 주십시오." maxlength="2000" required></textarea>
             </div>
 
             <button type="submit" class="btn-submit-civil">전자민원 신청서 제출</button>
@@ -2523,6 +2539,7 @@ button.law-article-header{width:100%;border:none;font:inherit;text-align:left}
       <a href="#" data-policy="a11y">웹접근성정책</a>
       <a href="#org">직제안내</a>
       <a href="#" data-policy="location">찾아오시는 길</a>
+      <a href="#" data-admin="1">관리자</a>
     </div>
 
     <!-- 주소 및 저작권 정보 -->
@@ -2545,7 +2562,7 @@ button.law-article-header{width:100%;border:none;font:inherit;text-align:left}
     <!-- 하단 패러디 공지 배너 -->
     <div class="footer-bottom-notice">
       <span>※ 본 누리집은 창작된 가상 행정 체계 관련 패러디 기관 웹사이트이며, 실제 정부나 기관, 단체와는 일절 무관합니다.</span>
-      <span>시스템 관리: 이음중앙관리국 총괄기획과 전산운영팀 · v2.2.0-GOV</span>
+      <span>시스템 관리: 이음중앙관리국 총괄기획과 전산운영팀 · v2.3.0-GOV</span>
     </div>
   </div>
 </footer>
@@ -2885,28 +2902,33 @@ function drawOrbit(targetId, width, height, radius) {
   const C = width / 2;
   const R = radius;
   const N = AGENCIES.length;
+  const pts = AGENCIES.map((a, i) => {
+    const ang = (-90 + (i * 360 / N)) * Math.PI / 180;
+    return { a, ang, x: C + R * Math.cos(ang), y: C + R * Math.sin(ang) };
+  });
 
-  let s = `
-    <!-- 중심 이음중앙관리국 엠블럼 노드 -->
+  /* 그리는 순서(뒤 → 앞): 궤도 원·연결선 → 중심 엠블럼 → 산하 기관 노드 */
+  let s = `<circle cx="${C}" cy="${C}" r="${R}" fill="none" stroke="#93c5fd" stroke-width="1.5" stroke-dasharray="4 6"/>`;
+
+  pts.forEach(q => {
+    s += `<line x1="${C}" y1="${C}" x2="${q.x.toFixed(1)}" y2="${q.y.toFixed(1)}" stroke="#cbd5e1" stroke-width="1.5"/>`;
+  });
+
+  s += `
+    <!-- 중심 이음중앙관리국 엠블럼 노드 (연결선 위에 그려 선이 가리지 않게 함) -->
     <circle cx="${C}" cy="${C}" r="44" fill="#ffffff" stroke="#003366" stroke-width="2.5" filter="drop-shadow(0 4px 6px rgba(0,0,0,0.08))"/>
-    <circle cx="${C}" cy="${C}" r="${R}" fill="none" stroke="#93c5fd" stroke-width="1.5" stroke-dasharray="4 6"/>
-    <!-- 중앙 이음 심볼 -->
     <circle cx="${C}" cy="${C}" r="54" fill="none" stroke="#003366" stroke-width="1" opacity="0.2"/>
     <circle cx="${C - 9}" cy="${C}" r="11" fill="none" stroke="#003366" stroke-width="3"/>
     <circle cx="${C + 9}" cy="${C}" r="11" fill="none" stroke="#e52528" stroke-width="3"/>
     <text x="${C}" y="${C + 28}" text-anchor="middle" fill="#003366" font-size="11" font-weight="900" font-family="'Noto Sans KR', sans-serif">이음중앙관리국</text>
   `;
 
-  AGENCIES.forEach((a, i) => {
-    const ang = (-90 + (i * 360 / N)) * Math.PI / 180;
-    const x = C + R * Math.cos(ang);
-    const y = C + R * Math.sin(ang);
-
+  pts.forEach(q => {
+    const a = q.a, x = q.x, y = q.y;
     s += `
-      <line x1="${C}" y1="${C}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="#cbd5e1" stroke-width="1.5"/>
       <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="16" fill="${a.open ? '#003366' : '#f8fafc'}" stroke="${a.open ? '#2563eb' : '#94a3b8'}" stroke-width="2.5"/>
       <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="6" fill="${a.open ? '#60a5fa' : '#cbd5e1'}"/>
-      <text x="${x.toFixed(1)}" y="${(y + (Math.sin(ang) < -0.4 ? -24 : 32)).toFixed(1)}" text-anchor="middle" fill="#0f172a" font-size="12" font-weight="700" font-family="'Noto Sans KR', sans-serif">
+      <text x="${x.toFixed(1)}" y="${(y + (Math.sin(q.ang) < -0.4 ? -24 : 32)).toFixed(1)}" text-anchor="middle" fill="#0f172a" font-size="12" font-weight="700" font-family="'Noto Sans KR', sans-serif">
         ${esc(a.name)}
       </text>
     `;
@@ -3027,26 +3049,41 @@ function openDocModal(no, title, body, dept, date) {
 }
 
 /* 13. 모의 전자민원 접수 처리 (접수 내역은 이 브라우저에만 저장) */
+const CIVIL_KEY = 'ieumCivil';
+const CIVIL_STATUS = ['접수 완료', '검토 중', '처리 완료', '반려'];
 function loadCivil() {
-  try { return JSON.parse(localStorage.getItem('ieumCivil') || '[]'); } catch (err) { return []; }
+  try {
+    const v = JSON.parse(localStorage.getItem(CIVIL_KEY) || '[]');
+    return Array.isArray(v) ? v : [];
+  } catch (err) { return []; }
 }
 function saveCivil(list) {
-  try { localStorage.setItem('ieumCivil', JSON.stringify(list.slice(0, 20))); } catch (err) {}
+  try { localStorage.setItem(CIVIL_KEY, JSON.stringify(list.slice(0, 500))); return true; }
+  catch (err) { toast('저장 공간이 부족하거나 사용할 수 없습니다.'); return false; }
 }
-function civilStatus(ts) {
-  const m = (Date.now() - ts) / 60000;
-  return m < 1 ? '접수 완료' : m < 3 ? '담당 부서 배정' : '검토 중 (모의)';
+function civilStatusOf(c) { return CIVIL_STATUS.includes(c.status) ? c.status : '접수 완료'; }
+function fmtTs(ts) {
+  const d = new Date(ts);
+  const z = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())} ${z(d.getHours())}:${z(d.getMinutes())}`;
+}
+function newReceiptNo(list) {
+  let no;
+  do { no = 'IEUM-' + new Date().getFullYear() + '-' + Math.floor(100000 + Math.random() * 900000); }
+  while (list.some(c => c.no === no));
+  return no;
 }
 function handleCivilSubmit(e) {
   e.preventDefault();
   const target = $('civilTarget').value;
   const title = $('civilTitle').value.trim();
   const content = $('civilContent').value.trim();
+  if (!title || !content) { toast('제목과 내용을 입력해 주십시오.'); return; }
 
-  const receiptNo = 'IEUM-' + new Date().getFullYear() + '-' + Math.floor(100000 + Math.random() * 900000);
-  const today = new Date().toISOString().split('T')[0];
   const list = loadCivil();
-  list.unshift({ no: receiptNo, date: today, ts: Date.now(), target, title, content });
+  const receiptNo = newReceiptNo(list);
+  const today = new Date().toISOString().split('T')[0];
+  list.unshift({ no: receiptNo, date: today, ts: Date.now(), target, title, content, status: '접수 완료' });
   saveCivil(list);
 
   const th = 'text-align:left;padding:8px;background:#e2e8f0;';
@@ -3061,11 +3098,12 @@ function handleCivilSubmit(e) {
         <tr style="border-bottom:1px solid #cbd5e1;"><th style="${th}">접수 일자</th><td style="padding:8px;">${today}</td></tr>
         <tr style="border-bottom:1px solid #cbd5e1;"><th style="${th}">대상 기관</th><td style="padding:8px;font-weight:700;">${esc(target)}</td></tr>
         <tr style="border-bottom:1px solid #cbd5e1;"><th style="${th}">민원 제목</th><td style="padding:8px;">${esc(title)}</td></tr>
-        <tr><th style="${th}vertical-align:top;">민원 내용</th><td style="padding:8px;line-height:1.5;">${esc(content)}</td></tr>
+        <tr><th style="${th}vertical-align:top;">민원 내용</th><td style="padding:8px;line-height:1.5;white-space:pre-wrap;word-break:break-word;">${esc(content)}</td></tr>
       </table>
       <p style="font-size:0.7812rem;color:#64748b;line-height:1.5;">
         * 접수된 민원은 해당 기관의 담당 주무관에게 배정되어 처리됩니다.<br>
-        * 접수증은 가상 체험 기능으로 발급된 모의 증서이며, 접수 내역은 이 브라우저에만 저장됩니다.
+        * 접수증은 가상 체험 기능으로 발급된 모의 증서이며, 접수 내역은 이 브라우저에만 저장됩니다.<br>
+        * 접수한 민원은 &#39;내 접수 내역 조회&#39;에서 언제든지 삭제하실 수 있습니다.
       </p>
     </div>
     <div class="modal-actions">
@@ -3077,6 +3115,8 @@ function handleCivilSubmit(e) {
   openCustomModal('전자민원 신청 완료', html);
   $('civilForm').reset();
 }
+
+/* 내 접수 내역 조회·삭제 */
 function openCivilLookup() {
   openCustomModal('내 접수 내역 조회', `
     <form id="civilLookupForm" style="display:flex;gap:8px;">
@@ -3084,14 +3124,120 @@ function openCivilLookup() {
       <input id="civilLookupNo" class="form-input" placeholder="접수번호 일부 입력 (비우면 전체)" style="flex:1;">
       <button type="submit" style="padding:8px 16px;border-radius:6px;border:1px solid #003366;background:#003366;color:#fff;font-weight:700;">조회</button>
     </form>
+    <div class="adm-note">이 브라우저에서 접수한 민원만 표시됩니다. 삭제하면 복구할 수 없습니다.</div>
     <div id="civilLookupResult"></div>`);
   renderCivilLookup('');
 }
 function renderCivilLookup(q) {
   const list = loadCivil().filter(c => !q || c.no.toLowerCase().includes(q.toLowerCase()));
   $('civilLookupResult').innerHTML = list.length
-    ? list.map(c => `<div class="lookup-row"><b>${esc(c.no)}</b> · ${esc(c.date)} · ${esc(c.target)}<br>${esc(c.title)}<br><span style="color:#64748b;">처리상태: ${civilStatus(c.ts)}</span></div>`).join('')
+    ? list.map(c => `<div class="lookup-row"><b>${esc(c.no)}</b> · ${esc(c.date)} · ${esc(c.target)}<br>${esc(c.title)}<br>
+        <span style="color:#64748b;">처리상태: </span><span class="status-chip">${esc(civilStatusOf(c))}</span>
+        <details><summary>민원 내용 보기</summary><div class="lookup-body">${esc(c.content)}</div></details>
+        <div class="row-actions"><button type="button" class="btn-danger" data-act="civil-del" data-no="${esc(c.no)}">삭제</button></div></div>`).join('')
     : '<p style="margin-top:14px;color:#64748b;">조회된 접수 내역이 없습니다.</p>';
+}
+
+/* 삭제 버튼: 한 번 누르면 "정말 삭제?"로 바뀌고, 3초 안에 다시 누르면 실행 */
+function confirmTwice(btn, fn) {
+  if (btn.classList.contains('armed')) { clearTimeout(btn._t); fn(); return; }
+  const orig = btn.textContent;
+  btn.classList.add('armed');
+  btn.textContent = '정말 삭제?';
+  btn._t = setTimeout(() => { btn.classList.remove('armed'); btn.textContent = orig; }, 3000);
+}
+function deleteCivil(no) {
+  const list = loadCivil();
+  const next = list.filter(c => c.no !== no);
+  if (next.length === list.length) return false;
+  saveCivil(next);
+  return true;
+}
+
+/* ===== 관리자: 접수 민원 전체 열람·상태 변경·삭제·내보내기 =====
+   주의: 정적 사이트(GitHub Pages)라서 아래 비밀번호 확인은 화면을 가리는 정도의 보호일 뿐 보안 장치가 아닙니다.
+   또한 민원은 접수한 사람의 브라우저에만 저장되므로, 관리자 화면에는 "이 브라우저"에 저장된 민원만 보입니다.
+   기본 비밀번호는 ieum-admin 입니다. 반드시 바꾸세요: 관리자 화면 하단 "비밀번호 해시 만들기"로 해시를 만든 뒤 아래 값에 붙여넣습니다. */
+const ADMIN_PW_SHA256 = 'cbb1af29d56b332c57cf41a6e48764c8dc52cdecf9c8128f076899e64d53698e';
+async function sha256Hex(text) {
+  if (!(window.crypto && crypto.subtle)) return null;
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return [...new Uint8Array(buf)].map(x => x.toString(16).padStart(2, '0')).join('');
+}
+function isAdmin() { try { return sessionStorage.getItem('ieumAdmin') === '1'; } catch (err) { return false; } }
+function setAdmin(v) { try { v ? sessionStorage.setItem('ieumAdmin', '1') : sessionStorage.removeItem('ieumAdmin'); } catch (err) {} }
+
+function openAdmin() {
+  if (!isAdmin()) {
+    openCustomModal('관리자 로그인', `
+      <form id="admLoginForm" style="display:flex;gap:8px;">
+        <label class="sr-only" for="admPw">관리자 비밀번호</label>
+        <input id="admPw" type="password" class="form-input" placeholder="관리자 비밀번호" autocomplete="off" style="flex:1;">
+        <button type="submit" style="padding:8px 16px;border-radius:6px;border:1px solid #003366;background:#003366;color:#fff;font-weight:700;">확인</button>
+      </form>`);
+    $('admPw').focus();
+    return;
+  }
+  openCustomModal('민원 관리 (관리자)', `
+    <div class="adm-note">접수된 민원은 접수한 사람의 브라우저에만 저장됩니다. 이 화면에는 <b>지금 사용 중인 브라우저</b>에 저장된 민원만 표시됩니다.</div>
+    <div class="adm-toolbar">
+      <label class="sr-only" for="admQ">검색</label><input type="search" id="admQ" placeholder="번호·제목·내용 검색">
+      <label class="sr-only" for="admTarget">대상 기관</label>
+      <select id="admTarget"><option value="">전체 기관</option>${[...new Set([...(typeof AGENCIES !== 'undefined' ? AGENCIES.map(a => a.name) : []), '이음중앙관리국'])].map(n => `<option>${esc(n)}</option>`).join('')}</select>
+      <label class="sr-only" for="admStatus">처리상태</label>
+      <select id="admStatus"><option value="">전체 상태</option>${CIVIL_STATUS.map(n => `<option>${esc(n)}</option>`).join('')}</select>
+    </div>
+    <div id="admCount" aria-live="polite" style="font-size:0.8125rem;color:#334155;margin-bottom:4px;"></div>
+    <div id="admList"></div>
+    <div class="adm-toolbar" style="margin-top:14px;">
+      <button type="button" data-act="adm-csv">CSV 내보내기</button>
+      <button type="button" data-act="adm-json">JSON 내보내기</button>
+      <button type="button" class="btn-danger" data-act="adm-clear">전체 삭제</button>
+      <button type="button" data-act="adm-logout" style="margin-left:auto;">로그아웃</button>
+    </div>
+    <details class="adm-note"><summary style="cursor:pointer;font-weight:700;">비밀번호 해시 만들기</summary>
+      <div class="adm-toolbar"><label class="sr-only" for="admNewPw">새 비밀번호</label><input id="admNewPw" type="text" placeholder="새 비밀번호" autocomplete="off"><button type="button" data-act="adm-hash">해시 생성</button></div>
+      <div id="admHashOut" style="word-break:break-all;font-family:monospace;"></div>
+      <div>생성된 값을 소스의 <code>ADMIN_PW_SHA256</code> 에 붙여넣으면 비밀번호가 바뀝니다.</div>
+    </details>`);
+  $('govModal').querySelector('.gov-modal-card').classList.add('wide');
+  renderAdminList();
+}
+function adminFiltered() {
+  const q = ($('admQ').value || '').trim().toLowerCase();
+  const t = $('admTarget').value, st = $('admStatus').value;
+  return loadCivil().filter(c =>
+    (!t || c.target === t) && (!st || civilStatusOf(c) === st) &&
+    (!q || [c.no, c.title, c.content, c.target].some(v => String(v).toLowerCase().includes(q))));
+}
+function renderAdminList() {
+  const all = loadCivil();
+  const list = adminFiltered();
+  $('admCount').textContent = `전체 ${all.length}건 중 ${list.length}건 표시`;
+  $('admList').innerHTML = list.length ? list.map(c => `
+    <div class="lookup-row adm-row"><b>${esc(c.no)}</b> · ${esc(fmtTs(c.ts || Date.parse(c.date)))} · ${esc(c.target)}<br>
+      <b>${esc(c.title)}</b>
+      <div class="lookup-body">${esc(c.content)}</div>
+      <div class="row-actions">
+        <label class="sr-only" for="st-${esc(c.no)}">처리상태</label>
+        <select id="st-${esc(c.no)}" data-adm-status="${esc(c.no)}">${CIVIL_STATUS.map(n => `<option${n === civilStatusOf(c) ? ' selected' : ''}>${esc(n)}</option>`).join('')}</select>
+        <button type="button" class="btn-danger" data-act="adm-del" data-no="${esc(c.no)}">삭제</button>
+      </div></div>`).join('')
+    : '<p style="margin-top:14px;color:#64748b;">표시할 민원이 없습니다.</p>';
+}
+function downloadFile(name, mime, text) {
+  const url = URL.createObjectURL(new Blob([text], { type: mime }));
+  const a = document.createElement('a');
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+function stampName() { return fmtTs(Date.now()).replace(/[-: ]/g, '').replace(/^(\d{8})(\d{4})$/, '$1_$2'); }
+function exportCivilCSV() {
+  const safe = v => { let t = String(v ?? ''); if (/^[=+\-@\t\r]/.test(t)) t = "'" + t; return '"' + t.replace(/"/g, '""') + '"'; };
+  const rows = [['접수번호', '접수일시', '대상 기관', '제목', '내용', '처리상태']]
+    .concat(loadCivil().map(c => [c.no, fmtTs(c.ts || Date.parse(c.date)), c.target, c.title, c.content, civilStatusOf(c)]));
+  downloadFile(`민원_${stampName()}.csv`, 'text/csv;charset=utf-8', '\uFEFF' + rows.map(r => r.map(safe).join(',')).join('\r\n'));
 }
 
 /* 14. 모달 유틸리티 (포커스 관리·ESC·스크롤 잠금) */
@@ -3099,6 +3245,7 @@ let lastFocusEl = null;
 function openCustomModal(title, bodyHtml) {
   const wasOpen = $('govModal').classList.contains('open');
   if (!wasOpen) lastFocusEl = document.activeElement;
+  $('govModal').querySelector('.gov-modal-card').classList.remove('wide');
   $('modalTitle').innerHTML = title;
   $('modalBody').innerHTML = bodyHtml;
   $('govModal').classList.add('open');
@@ -3336,6 +3483,60 @@ window.addEventListener('scroll', () => {
   if (!spyTick) { spyTick = true; requestAnimationFrame(updateSpy); }
 }, { passive: true });
 updateSpy();
+
+/* ===== v2.3.0 민원 삭제·관리자 이벤트 ===== */
+$('modalBody').addEventListener('click', async e => {
+  const act = e.target.closest('[data-act]');
+  if (!act) return;
+  const a = act.dataset.act;
+  if (a === 'civil-del') {
+    confirmTwice(act, () => {
+      if (deleteCivil(act.dataset.no)) { toast('민원이 삭제되었습니다.'); renderCivilLookup(($('civilLookupNo').value || '').trim()); }
+    });
+  } else if (a === 'adm-del') {
+    confirmTwice(act, () => {
+      if (deleteCivil(act.dataset.no)) { toast('민원이 삭제되었습니다.'); renderAdminList(); }
+    });
+  } else if (a === 'adm-clear') {
+    confirmTwice(act, () => { saveCivil([]); toast('모든 민원이 삭제되었습니다.'); renderAdminList(); });
+  } else if (a === 'adm-csv') {
+    if (!loadCivil().length) { toast('내보낼 민원이 없습니다.'); return; }
+    exportCivilCSV();
+  } else if (a === 'adm-json') {
+    if (!loadCivil().length) { toast('내보낼 민원이 없습니다.'); return; }
+    downloadFile(`민원_${stampName()}.json`, 'application/json;charset=utf-8', JSON.stringify(loadCivil(), null, 2));
+  } else if (a === 'adm-logout') {
+    setAdmin(false); closeModal(); toast('로그아웃되었습니다.');
+  } else if (a === 'adm-hash') {
+    const pw = $('admNewPw').value;
+    if (!pw) { toast('새 비밀번호를 입력해 주십시오.'); return; }
+    const h = await sha256Hex(pw);
+    $('admHashOut').textContent = h || '이 환경에서는 해시를 만들 수 없습니다. https 주소에서 열어 주세요.';
+  }
+});
+$('modalBody').addEventListener('submit', async e => {
+  if (e.target.id !== 'admLoginForm') return;
+  e.preventDefault();
+  const h = await sha256Hex($('admPw').value);
+  if (h === null) { toast('이 환경에서는 관리자 인증을 사용할 수 없습니다. https 주소에서 열어 주세요.'); return; }
+  if (h === ADMIN_PW_SHA256) { setAdmin(true); openAdmin(); }
+  else { await new Promise(r => setTimeout(r, 700)); toast('비밀번호가 올바르지 않습니다.'); $('admPw').select(); }
+});
+$('modalBody').addEventListener('input', e => {
+  if (['admQ'].includes(e.target.id)) renderAdminList();
+});
+$('modalBody').addEventListener('change', e => {
+  if (e.target.id === 'admTarget' || e.target.id === 'admStatus') { renderAdminList(); return; }
+  const no = e.target.dataset && e.target.dataset.admStatus;
+  if (no) {
+    const list = loadCivil();
+    const c = list.find(x => x.no === no);
+    if (c) { c.status = e.target.value; saveCivil(list); toast('처리상태가 변경되었습니다.'); renderAdminList(); }
+  }
+});
+document.querySelector('.footer-policy-links').addEventListener('click', e => {
+  if (e.target.closest('[data-admin]')) { e.preventDefault(); openAdmin(); }
+});
 </script>
 </body>
 </html>
