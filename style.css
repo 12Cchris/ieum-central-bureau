@@ -1751,22 +1751,17 @@ button.law-article-header{width:100%;border:none;font:inherit;text-align:left}
 .modal-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
 .modal-actions button{padding:8px 14px;border-radius:6px;border:1px solid var(--gov-navy);background:#fff;color:var(--gov-navy);font-weight:700;font-size:0.8125rem}
 .modal-actions button:hover{background:var(--gov-blue-subtle)}
-.gov-modal-card.wide{max-width:980px}
 .row-actions{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
-.row-actions button,.adm-toolbar button{padding:5px 11px;border-radius:6px;border:1px solid var(--gov-navy);background:#fff;color:var(--gov-navy);font-weight:700;font-size:0.75rem}
-.row-actions button:hover,.adm-toolbar button:hover{background:var(--gov-blue-subtle)}
+.row-actions button{padding:5px 11px;border-radius:6px;border:1px solid var(--gov-navy);background:#fff;color:var(--gov-navy);font-weight:700;font-size:0.75rem}
+.row-actions button:hover{background:var(--gov-blue-subtle)}
 button.btn-danger{border-color:#c91b1b!important;color:#c91b1b!important}
 button.btn-danger:hover{background:#fdecec!important}
 button.btn-danger.armed{background:#c91b1b!important;color:#fff!important}
-.adm-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0}
-.adm-toolbar input,.adm-toolbar select{border:1px solid var(--gov-border);border-radius:6px;padding:6px 9px;font:inherit;font-size:0.8125rem;background:#fff}
-.adm-toolbar input[type=search]{flex:1;min-width:150px}
 .adm-note{font-size:0.75rem;color:#64748b;line-height:1.6;background:#f8fafc;border:1px solid var(--gov-border);border-radius:6px;padding:8px 10px;margin:8px 0}
 .lookup-row details{margin-top:6px}
 .lookup-row summary{cursor:pointer;color:#1d4ed8;font-weight:700}
 .lookup-body{white-space:pre-wrap;word-break:break-word;background:#f8fafc;border-radius:6px;padding:8px 10px;margin-top:6px}
 .status-chip{display:inline-block;padding:1px 8px;border-radius:10px;background:#e8f0fe;color:#0d4b8f;font-weight:700;font-size:0.75rem}
-.adm-row select{padding:3px 6px;border:1px solid var(--gov-border);border-radius:5px;font:inherit;font-size:0.75rem}
 .lookup-row{border:1px solid var(--gov-border);border-radius:6px;padding:10px 12px;margin-top:8px;font-size:0.8125rem;line-height:1.6}
 .lookup-row b{color:var(--gov-blue)}
 .res-sec h4{color:var(--gov-navy);margin:14px 0 6px}
@@ -1864,4 +1859,22 @@ button.btn-danger.armed{background:#c91b1b!important;color:#fff!important}
   body {
     background: #ffffff !important;
   }
+}
+
+/* 모바일 보강: 그리드 안의 긴 내용이 화면 밖으로 밀지 않도록 */
+.news-portal-grid > *, .agencies-grid > *, .gov-network-box > *, .faq-portal-grid > *, .pillar-grid > * { min-width: 0; }
+.board-tabs { flex-wrap: wrap; }
+.notice-row-title { min-width: 0; }
+@media (max-width: 520px) {
+  .notice-item-top { flex-wrap: wrap; row-gap: 4px; }
+  .notice-row-title { order: 3; flex-basis: 100%; white-space: normal; }
+  .notice-date { margin-left: auto; }
+}
+.zoom-btn, .gov-info-toggle-btn { white-space: nowrap; }
+.gov-top-links { flex-wrap: wrap; }
+@media (max-width: 768px) {
+  .section-head { flex-wrap: wrap; row-gap: 6px; }
+}
+@media (max-width: 400px) {
+  .gov-stats-dashboard { grid-template-columns: repeat(2, 1fr); }
 }

@@ -3,14 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
 <title>이음중앙관리국 공식 누리집</title>
 <meta name="description" content="모든 산하 기관을 잇고 총괄하는 최상위 가상행정 포털 - 이음중앙관리국">
 <meta property="og:title" content="이음중앙관리국 공식 누리집">
 <meta property="og:description" content="선물에서 가위바위보, 시상에 이르기까지 모든 위원회를 총괄하는 최상위 가상 거버넌스 기구">
 <meta property="og:type" content="website">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:site_name" content="이음중앙관리국">
+<meta property="og:url" content="https://12cchris.github.io/ieum-central-bureau/">
+<meta property="og:image" content="https://12cchris.github.io/ieum-central-bureau/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23003366'/%3E%3Ccircle cx='24' cy='32' r='14' fill='none' stroke='%23ffffff' stroke-width='4.5'/%3E%3Ccircle cx='40' cy='32' r='14' fill='none' stroke='%23e52528' stroke-width='4.5'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -161,7 +165,6 @@
       <li><a href="#notices">고시·공고</a></li>
       <li><a href="#history">기관 연혁</a></li>
       <li><a href="#faq">민원·참여</a></li>
-      <li><a href="#" data-admin="1">관리자</a></li>
     </ul>
 
     <div class="gnb-actions">
@@ -348,10 +351,10 @@
         <!-- 좌측: 공공 게시판 & 리스트 -->
         <div class="notice-board-card">
           <div class="board-tabs" role="tablist">
-            <button type="button" class="board-tab active" role="tab" aria-selected="true" onclick="filterNoticeTab('all', this)">전체 공고</button>
-            <button type="button" class="board-tab" role="tab" aria-selected="false" onclick="filterNoticeTab('gosi', this)">고시</button>
-            <button type="button" class="board-tab" role="tab" aria-selected="false" onclick="filterNoticeTab('guideline', this)">업무지침</button>
-            <button type="button" class="board-tab" role="tab" aria-selected="false" onclick="filterNoticeTab('info', this)">안내사항</button>
+            <button type="button" class="board-tab active" role="tab" id="ntTab-all" aria-selected="true" aria-controls="ntList" tabindex="0" onclick="filterNoticeTab('all', this)">전체 공고</button>
+            <button type="button" class="board-tab" role="tab" id="ntTab-gosi" aria-selected="false" aria-controls="ntList" tabindex="-1" onclick="filterNoticeTab('gosi', this)">고시</button>
+            <button type="button" class="board-tab" role="tab" id="ntTab-guideline" aria-selected="false" aria-controls="ntList" tabindex="-1" onclick="filterNoticeTab('guideline', this)">업무지침</button>
+            <button type="button" class="board-tab" role="tab" id="ntTab-info" aria-selected="false" aria-controls="ntList" tabindex="-1" onclick="filterNoticeTab('info', this)">안내사항</button>
           </div>
 
           <div class="notice-toolbar">
@@ -361,7 +364,7 @@
             <select id="ntSort"><option value="new">최신순</option><option value="old">오래된순</option></select>
           </div>
           <div class="nt-count" id="ntCount" aria-live="polite"></div>
-          <div class="notice-table-list" id="ntList">
+          <div class="notice-table-list" id="ntList" role="tabpanel" aria-labelledby="ntTab-all">
             <!-- 자바스크립트 동적 렌더링 -->
           </div>
         </div>
@@ -674,7 +677,6 @@
       <a href="#" data-policy="a11y">웹접근성정책</a>
       <a href="#org">직제안내</a>
       <a href="#" data-policy="location">찾아오시는 길</a>
-      <a href="#" data-admin="1">관리자</a>
     </div>
 
     <!-- 주소 및 저작권 정보 -->
@@ -697,7 +699,7 @@
     <!-- 하단 패러디 공지 배너 -->
     <div class="footer-bottom-notice">
       <span>※ 본 누리집은 창작된 가상 행정 체계 관련 패러디 기관 웹사이트이며, 실제 정부나 기관, 단체와는 일절 무관합니다.</span>
-      <span>시스템 관리: 이음중앙관리국 총괄기획과 전산운영팀 · v2.7.1-GOV</span>
+      <span>시스템 관리: 이음중앙관리국 총괄기획과 전산운영팀 · v2.8.0-GOV</span>
     </div>
   </div>
 </footer>

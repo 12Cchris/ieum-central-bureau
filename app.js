@@ -129,11 +129,29 @@ function filterNoticeTab(tab, btn) {
   document.querySelectorAll('.board-tab').forEach(b => {
     b.classList.remove('active');
     b.setAttribute('aria-selected', 'false');
+    b.tabIndex = -1;
   });
   btn.classList.add('active');
   btn.setAttribute('aria-selected', 'true');
+  btn.tabIndex = 0;
+  $('ntList').setAttribute('aria-labelledby', btn.id);
   renderNotices(tab);
 }
+/* 탭 키보드 조작: ← → Home End */
+document.querySelector('.board-tabs').addEventListener('keydown', e => {
+  const tabs = [...document.querySelectorAll('.board-tab')];
+  const i = tabs.indexOf(document.activeElement);
+  if (i < 0) return;
+  let n = null;
+  if (e.key === 'ArrowRight') n = (i + 1) % tabs.length;
+  else if (e.key === 'ArrowLeft') n = (i - 1 + tabs.length) % tabs.length;
+  else if (e.key === 'Home') n = 0;
+  else if (e.key === 'End') n = tabs.length - 1;
+  if (n === null) return;
+  e.preventDefault();
+  tabs[n].focus();
+  tabs[n].click();
+});
 
 /* 4. 부서 직제 및 조직도 렌더링 */
 function renderOrg() {
@@ -272,6 +290,7 @@ $('btnZoomReset').addEventListener('click', () => {
 function updateZoom() {
   document.documentElement.style.fontSize = (16 * currentZoom / 100) + 'px';
   $('zoomVal').textContent = currentZoom + '%';
+  try { localStorage.setItem('ieumZoom', currentZoom); } catch (err) {}
 }
 
 /* 10. 공식 누리집 확인 안내 토글 */
@@ -466,98 +485,11 @@ function deleteCivil(no) {
   return true;
 }
 
-/* ===== 관리자: 접수 민원 전체 열람·상태 변경·삭제·내보내기 =====
-   주의: 정적 사이트(GitHub Pages)라서 아래 비밀번호 확인은 화면을 가리는 정도의 보호일 뿐 보안 장치가 아닙니다.
-   또한 민원은 접수한 사람의 브라우저에만 저장되므로, 관리자 화면에는 "이 브라우저"에 저장된 민원만 보입니다.
-   비밀번호는 소스에 적지 마세요. 바꾸려면 관리자 화면 하단 "비밀번호 해시 만들기"로 해시를 만든 뒤 아래 값에 붙여넣습니다. */
-const ADMIN_PW_SHA256 = '4a65d874a5cbe25286e5d5d6db3ce24fc06c9d99eef619718fe839941cecc39c';
-async function sha256Hex(text) {
-  if (!(window.crypto && crypto.subtle)) return null;
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
-  return [...new Uint8Array(buf)].map(x => x.toString(16).padStart(2, '0')).join('');
-}
-function isAdmin() { try { return sessionStorage.getItem('ieumAdmin') === '1'; } catch (err) { return false; } }
-function setAdmin(v) { try { v ? sessionStorage.setItem('ieumAdmin', '1') : sessionStorage.removeItem('ieumAdmin'); } catch (err) {} }
-
-function openAdmin() {
-  if (!isAdmin()) {
-    openCustomModal('관리자 로그인', `
-      <form id="admLoginForm" style="display:flex;gap:8px;">
-        <label class="sr-only" for="admPw">관리자 비밀번호</label>
-        <input id="admPw" type="password" class="form-input" placeholder="관리자 비밀번호" autocomplete="off" style="flex:1;">
-        <button type="submit" style="padding:8px 16px;border-radius:6px;border:1px solid #003366;background:#003366;color:#fff;font-weight:700;">확인</button>
-      </form>`);
-    $('admPw').focus();
-    return;
-  }
-  openCustomModal('민원 관리 (관리자)', `
-    <div class="adm-note">접수된 민원은 접수한 사람의 브라우저에만 저장됩니다. 이 화면에는 <b>지금 사용 중인 브라우저</b>에 저장된 민원만 표시됩니다.</div>
-    <div class="adm-toolbar">
-      <label class="sr-only" for="admQ">검색</label><input type="search" id="admQ" placeholder="번호·제목·내용 검색">
-      <label class="sr-only" for="admTarget">대상 기관</label>
-      <select id="admTarget"><option value="">전체 기관</option>${[...new Set([...(typeof AGENCIES !== 'undefined' ? AGENCIES.map(a => a.name) : []), '이음중앙관리국'])].map(n => `<option>${esc(n)}</option>`).join('')}</select>
-      <label class="sr-only" for="admStatus">처리상태</label>
-      <select id="admStatus"><option value="">전체 상태</option>${CIVIL_STATUS.map(n => `<option>${esc(n)}</option>`).join('')}</select>
-    </div>
-    <div id="admCount" aria-live="polite" style="font-size:0.8125rem;color:#334155;margin-bottom:4px;"></div>
-    <div id="admList"></div>
-    <div class="adm-toolbar" style="margin-top:14px;">
-      <button type="button" data-act="adm-csv">CSV 내보내기</button>
-      <button type="button" data-act="adm-json">JSON 내보내기</button>
-      <button type="button" class="btn-danger" data-act="adm-clear">전체 삭제</button>
-      <button type="button" data-act="adm-logout" style="margin-left:auto;">로그아웃</button>
-    </div>
-    <details class="adm-note"><summary style="cursor:pointer;font-weight:700;">비밀번호 해시 만들기</summary>
-      <div class="adm-toolbar"><label class="sr-only" for="admNewPw">새 비밀번호</label><input id="admNewPw" type="text" placeholder="새 비밀번호" autocomplete="off"><button type="button" data-act="adm-hash">해시 생성</button></div>
-      <div id="admHashOut" style="word-break:break-all;font-family:monospace;"></div>
-      <div>생성된 값을 소스의 <code>ADMIN_PW_SHA256</code> 에 붙여넣으면 비밀번호가 바뀝니다.</div>
-    </details>`);
-  $('govModal').querySelector('.gov-modal-card').classList.add('wide');
-  renderAdminList();
-}
-function adminFiltered() {
-  const q = ($('admQ').value || '').trim().toLowerCase();
-  const t = $('admTarget').value, st = $('admStatus').value;
-  return loadCivil().filter(c =>
-    (!t || c.target === t) && (!st || civilStatusOf(c) === st) &&
-    (!q || [c.no, c.title, c.content, c.target].some(v => String(v).toLowerCase().includes(q))));
-}
-function renderAdminList() {
-  const all = loadCivil();
-  const list = adminFiltered();
-  $('admCount').textContent = `전체 ${all.length}건 중 ${list.length}건 표시`;
-  $('admList').innerHTML = list.length ? list.map(c => `
-    <div class="lookup-row adm-row"><b>${esc(c.no)}</b> · ${esc(fmtTs(c.ts || Date.parse(c.date)))} · ${esc(c.target)}<br>
-      <b>${esc(c.title)}</b>
-      <div class="lookup-body">${esc(c.content)}</div>
-      <div class="row-actions">
-        <label class="sr-only" for="st-${esc(c.no)}">처리상태</label>
-        <select id="st-${esc(c.no)}" data-adm-status="${esc(c.no)}">${CIVIL_STATUS.map(n => `<option${n === civilStatusOf(c) ? ' selected' : ''}>${esc(n)}</option>`).join('')}</select>
-        <button type="button" class="btn-danger" data-act="adm-del" data-no="${esc(c.no)}">삭제</button>
-      </div></div>`).join('')
-    : '<p style="margin-top:14px;color:#64748b;">표시할 민원이 없습니다.</p>';
-}
-function downloadFile(name, mime, text) {
-  const url = URL.createObjectURL(new Blob([text], { type: mime }));
-  const a = document.createElement('a');
-  a.href = url; a.download = name;
-  document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
-function stampName() { return fmtTs(Date.now()).replace(/[-: ]/g, '').replace(/^(\d{8})(\d{4})$/, '$1_$2'); }
-function exportCivilCSV() {
-  const safe = v => { let t = String(v ?? ''); if (/^[=+\-@\t\r]/.test(t)) t = "'" + t; return '"' + t.replace(/"/g, '""') + '"'; };
-  const rows = [['접수번호', '접수일시', '대상 기관', '제목', '내용', '처리상태']]
-    .concat(loadCivil().map(c => [c.no, fmtTs(c.ts || Date.parse(c.date)), c.target, c.title, c.content, civilStatusOf(c)]));
-  downloadFile(`민원_${stampName()}.csv`, 'text/csv;charset=utf-8', '\uFEFF' + rows.map(r => r.map(safe).join(',')).join('\r\n'));
-}
-
 /* 14. 모달 유틸리티 (포커스 관리·ESC·스크롤 잠금) */
 let lastFocusEl = null;
 function openCustomModal(title, bodyHtml) {
   const wasOpen = $('govModal').classList.contains('open');
   if (!wasOpen) lastFocusEl = document.activeElement;
-  $('govModal').querySelector('.gov-modal-card').classList.remove('wide');
   $('modalTitle').innerHTML = title;
   $('modalBody').innerHTML = bodyHtml;
   $('govModal').classList.add('open');
@@ -746,11 +678,6 @@ try {
   const saved = parseInt(localStorage.getItem('ieumZoom'), 10);
   if (saved >= 90 && saved <= 140) { currentZoom = saved; updateZoom(); }
 } catch (err) {}
-const _updateZoom = updateZoom;
-updateZoom = function () {
-  _updateZoom();
-  try { localStorage.setItem('ieumZoom', currentZoom); } catch (err) {}
-};
 
 /* ===== v2.2.0 보강 ===== */
 /* 22. 우측 산하기관 배너를 AGENCIES에서 생성 */
@@ -796,56 +723,11 @@ window.addEventListener('scroll', () => {
 }, { passive: true });
 updateSpy();
 
-/* ===== v2.3.0 민원 삭제·관리자 이벤트 ===== */
-$('modalBody').addEventListener('click', async e => {
-  const act = e.target.closest('[data-act]');
+/* ===== 민원 삭제 이벤트 ===== */
+$('modalBody').addEventListener('click', e => {
+  const act = e.target.closest('[data-act="civil-del"]');
   if (!act) return;
-  const a = act.dataset.act;
-  if (a === 'civil-del') {
-    confirmTwice(act, () => {
-      if (deleteCivil(act.dataset.no)) { toast('민원이 삭제되었습니다.'); renderCivilLookup(($('civilLookupNo').value || '').trim()); }
-    });
-  } else if (a === 'adm-del') {
-    confirmTwice(act, () => {
-      if (deleteCivil(act.dataset.no)) { toast('민원이 삭제되었습니다.'); renderAdminList(); }
-    });
-  } else if (a === 'adm-clear') {
-    confirmTwice(act, () => { saveCivil([]); toast('모든 민원이 삭제되었습니다.'); renderAdminList(); });
-  } else if (a === 'adm-csv') {
-    if (!loadCivil().length) { toast('내보낼 민원이 없습니다.'); return; }
-    exportCivilCSV();
-  } else if (a === 'adm-json') {
-    if (!loadCivil().length) { toast('내보낼 민원이 없습니다.'); return; }
-    downloadFile(`민원_${stampName()}.json`, 'application/json;charset=utf-8', JSON.stringify(loadCivil(), null, 2));
-  } else if (a === 'adm-logout') {
-    setAdmin(false); closeModal(); toast('로그아웃되었습니다.');
-  } else if (a === 'adm-hash') {
-    const pw = $('admNewPw').value;
-    if (!pw) { toast('새 비밀번호를 입력해 주십시오.'); return; }
-    const h = await sha256Hex(pw);
-    $('admHashOut').textContent = h || '이 환경에서는 해시를 만들 수 없습니다. https 주소에서 열어 주세요.';
-  }
-});
-$('modalBody').addEventListener('submit', async e => {
-  if (e.target.id !== 'admLoginForm') return;
-  e.preventDefault();
-  const h = await sha256Hex($('admPw').value);
-  if (h === null) { toast('이 환경에서는 관리자 인증을 사용할 수 없습니다. https 주소에서 열어 주세요.'); return; }
-  if (h === ADMIN_PW_SHA256) { setAdmin(true); openAdmin(); }
-  else { await new Promise(r => setTimeout(r, 700)); toast('비밀번호가 올바르지 않습니다.'); $('admPw').select(); }
-});
-$('modalBody').addEventListener('input', e => {
-  if (['admQ'].includes(e.target.id)) renderAdminList();
-});
-$('modalBody').addEventListener('change', e => {
-  if (e.target.id === 'admTarget' || e.target.id === 'admStatus') { renderAdminList(); return; }
-  const no = e.target.dataset && e.target.dataset.admStatus;
-  if (no) {
-    const list = loadCivil();
-    const c = list.find(x => x.no === no);
-    if (c) { c.status = e.target.value; saveCivil(list); toast('처리상태가 변경되었습니다.'); renderAdminList(); }
-  }
-});
-document.addEventListener('click', e => {
-  if (e.target.closest('[data-admin]')) { e.preventDefault(); openAdmin(); }
+  confirmTwice(act, () => {
+    if (deleteCivil(act.dataset.no)) { toast('민원이 삭제되었습니다.'); renderCivilLookup(($('civilLookupNo').value || '').trim()); }
+  });
 });
