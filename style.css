@@ -885,6 +885,9 @@ button {
 .banner-card.bg-award {
   background: linear-gradient(135deg, #4c2f13 0%, #875c27 100%);
 }
+.banner-card.bg-conscience {
+  background: linear-gradient(135deg, #123b3a 0%, #2a7068 100%);
+}
 .banner-card .b-tag {
   font-size: 0.6875rem;
   font-weight: 700;
@@ -917,7 +920,7 @@ button {
    ======================================================== */
 .agencies-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 20px;
   margin-bottom: 30px;
 }

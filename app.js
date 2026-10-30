@@ -1,4 +1,4 @@
-/* 기능: 화면 그리기·검색·모달·전자민원·관리자 등 모든 동작 (data.js 다음에 불러와야 함) */
+/* 기능: 화면 그리기·검색·모달·전자민원 등 모든 동작 (data.js 다음에 불러와야 함) */
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -640,6 +640,8 @@ function syncPortalStatus() {
   $('stCount').textContent = AGENCIES.length;
   $('stOpen').textContent = AGENCIES.filter(a => a.open).length;
   $('stNotice').textContent = NOTICES.length;
+  $('stat1').textContent = AGENCIES.length;
+  $('stat3').textContent = RULES.length + '개조';
   if (latest) {
     $('widgetTodayDate').textContent = '기준일 ' + latest.date.replace(/-/g, '.');
     $('tickerDate').textContent = latest.date;
@@ -683,7 +685,7 @@ try {
 /* ===== v2.2.0 보강 ===== */
 /* 22. 우측 산하기관 배너를 AGENCIES에서 생성 */
 function renderBanners() {
-  const cls = ['bg-gift', 'bg-rps', 'bg-award'];
+  const cls = ['bg-gift', 'bg-rps', 'bg-award', 'bg-conscience'];
   $('bannerZone').innerHTML = AGENCIES.map((a, i) => {
     const inner = `
       <div>
