@@ -574,6 +574,7 @@ $('btnAllMenu').addEventListener('click', () => {
           <li><a href="#agencies" onclick="closeModal()">중앙선물위원회</a></li>
           <li><a href="#agencies" onclick="closeModal()">가위바위보 심의위원회</a></li>
           <li><a href="#agencies" onclick="closeModal()">중앙시상위원회</a></li>
+          <li><a href="#agencies" onclick="closeModal()">양심감사위원회</a></li>
           <li><a href="#network" onclick="closeModal()">통합 연계 도식</a></li>
         </ul>
       </div>
