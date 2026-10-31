@@ -1881,3 +1881,492 @@ button.btn-danger.armed{background:#c91b1b!important;color:#fff!important}
 @media (max-width: 400px) {
   .gov-stats-dashboard { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* ========================================================
+   관리자 시스템 스타일 (Admin System)
+   ======================================================== */
+
+/* 관리자 영역 (상단 유틸리티 바) */
+.admin-area {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.admin-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #c4161c;
+  color: #ffffff;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 14px;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  animation: adminPulse 2.5s infinite;
+}
+@keyframes adminPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(196,22,28,0.4); }
+  50% { box-shadow: 0 0 0 5px rgba(196,22,28,0); }
+}
+.admin-login-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #003366;
+  color: #ffffff;
+  border: none;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 14px;
+  cursor: pointer;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  transition: background 0.18s;
+}
+.admin-login-btn:hover {
+  background: #1354d3;
+}
+.admin-login-btn.logged-in {
+  background: #7c3aed;
+}
+.admin-login-btn.logged-in:hover {
+  background: #6d28d9;
+}
+
+/* 토글 스위치 */
+.toggle-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+.toggle-switch input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.toggle-track {
+  width: 42px;
+  height: 22px;
+  background: #94a3b8;
+  border-radius: 11px;
+  position: relative;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+.toggle-switch input:checked + .toggle-track {
+  background: #16a34a;
+}
+.toggle-switch input:checked + .toggle-track.blocked-mode {
+  background: #c4161c;
+}
+.toggle-track::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background: #ffffff;
+  border-radius: 50%;
+  top: 3px;
+  left: 3px;
+  transition: left 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.toggle-switch input:checked + .toggle-track::after {
+  left: 23px;
+}
+.toggle-label {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+/* 관리자 패널 모달 내부 스타일 */
+.admin-panel-section {
+  margin-bottom: 24px;
+}
+.admin-panel-section h4 {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #003366;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #003366;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.admin-agency-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+.admin-agency-row.is-blocked {
+  background: #fff5f5;
+  border-color: #fca5a5;
+}
+.admin-agency-name {
+  font-size: 0.9375rem;
+  font-weight: 800;
+  color: #0f172a;
+  min-width: 160px;
+}
+.admin-agency-code {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-top: 1px;
+}
+.admin-reason-input {
+  flex: 1;
+  min-width: 140px;
+  padding: 6px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  font-size: 0.8125rem;
+  font-family: inherit;
+}
+.admin-reason-input:focus {
+  outline: none;
+  border-color: #1354d3;
+}
+.admin-bulk-btns {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.admin-bulk-btn {
+  padding: 7px 16px;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: background 0.15s;
+}
+.admin-bulk-btn.block-all {
+  background: #c4161c;
+  color: #fff;
+}
+.admin-bulk-btn.block-all:hover {
+  background: #991b1b;
+}
+.admin-bulk-btn.unblock-all {
+  background: #003366;
+  color: #fff;
+}
+.admin-bulk-btn.unblock-all:hover {
+  background: #1354d3;
+}
+
+/* 관리자 로그 */
+.admin-log-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.7812rem;
+}
+.admin-log-table th {
+  background: #e8f0fe;
+  color: #0d4b8f;
+  font-weight: 800;
+  padding: 6px 10px;
+  text-align: left;
+  border-bottom: 2px solid #bfdbfe;
+}
+.admin-log-table td {
+  padding: 6px 10px;
+  border-bottom: 1px solid #e2e8f0;
+  color: #334155;
+  vertical-align: middle;
+}
+.admin-log-table tr:last-child td {
+  border-bottom: none;
+}
+.log-action-block {
+  color: #c4161c;
+  font-weight: 700;
+}
+.log-action-unblock {
+  color: #16a34a;
+  font-weight: 700;
+}
+.admin-log-empty {
+  text-align: center;
+  color: #94a3b8;
+  padding: 16px;
+  font-size: 0.8125rem;
+}
+
+/* 관리자 민원 관리 목록 */
+.admin-civil-item {
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  background: #fafafa;
+}
+.admin-civil-item b {
+  color: #1354d3;
+}
+.admin-civil-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+/* 접근 차단 안내 카드 (Block Notice) */
+.block-notice-card {
+  border: 2px solid #c4161c;
+  border-radius: 8px;
+  padding: 28px 26px;
+  background: #fff;
+  position: relative;
+  font-family: 'Noto Sans KR', sans-serif;
+}
+.block-notice-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: #c4161c;
+  border-radius: 6px 6px 0 0;
+}
+.block-notice-header {
+  text-align: center;
+  border-bottom: 2px solid #c4161c;
+  padding-bottom: 14px;
+  margin-bottom: 18px;
+}
+.block-notice-badge {
+  display: inline-block;
+  background: #c4161c;
+  color: #fff;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  padding: 2px 10px;
+  border-radius: 3px;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+.block-notice-title {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 1.375rem;
+  font-weight: 900;
+  color: #c4161c;
+  margin: 6px 0 2px;
+}
+.block-notice-sub {
+  font-size: 0.8125rem;
+  color: #64748b;
+}
+.block-notice-body {
+  font-size: 0.875rem;
+  line-height: 1.8;
+  color: #1e293b;
+  margin-bottom: 18px;
+}
+.block-notice-body table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8438rem;
+}
+.block-notice-body table th {
+  text-align: left;
+  padding: 7px 10px;
+  background: #fef2f2;
+  color: #991b1b;
+  font-weight: 800;
+  border: 1px solid #fca5a5;
+  width: 110px;
+}
+.block-notice-body table td {
+  padding: 7px 10px;
+  border: 1px solid #fca5a5;
+  color: #1e293b;
+}
+.block-notice-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-top: 20px;
+  border-top: 1px dashed #fca5a5;
+  padding-top: 14px;
+}
+.block-notice-footer .sign {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 1.0625rem;
+  font-weight: 900;
+  color: #c4161c;
+  letter-spacing: 2px;
+}
+.block-notice-footer .note {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+/* 차단된 기관 카드 스타일 */
+.agency-gov-card.agency-blocked {
+  border-color: #fca5a5;
+  background: #fff5f5;
+}
+.agency-gov-card.agency-blocked:hover {
+  border-color: #f87171;
+}
+.agency-blocked-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #c4161c;
+  color: #fff;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 12px;
+}
+.agency-btn.blocked {
+  background: #fee2e2;
+  color: #c4161c;
+  cursor: not-allowed;
+  border: 1px dashed #f87171;
+}
+.agency-btn.blocked:hover {
+  background: #fee2e2;
+  color: #c4161c;
+}
+.banner-card.banner-blocked {
+  filter: grayscale(0.7);
+  cursor: not-allowed;
+  position: relative;
+}
+.banner-card.banner-blocked::after {
+  content: '⛔ 접근 차단됨';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(196,22,28,0.92);
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 800;
+  padding: 6px 16px;
+  border-radius: 20px;
+  pointer-events: none;
+}
+
+/* 관리자 로그인 폼 */
+.admin-login-form {
+  padding: 8px 0;
+}
+.admin-login-form label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #334155;
+  margin-bottom: 6px;
+}
+.admin-login-form input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  font-size: 0.9375rem;
+  font-family: inherit;
+  margin-bottom: 14px;
+}
+.admin-login-form input:focus {
+  outline: none;
+  border-color: #003366;
+  box-shadow: 0 0 0 3px rgba(0,51,102,0.12);
+}
+.admin-login-submit {
+  width: 100%;
+  background: #003366;
+  color: #fff;
+  border: none;
+  padding: 11px;
+  border-radius: 4px;
+  font-size: 0.9375rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.admin-login-submit:hover {
+  background: #1354d3;
+}
+.admin-login-error {
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  color: #c4161c;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  margin-top: 10px;
+  display: none;
+}
+.admin-login-error.show {
+  display: block;
+}
+.admin-logout-btn {
+  background: none;
+  border: 1px solid #c4161c;
+  color: #c4161c;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.admin-logout-btn:hover {
+  background: #c4161c;
+  color: #fff;
+}
+
+/* 관리자 패널 헤더 */
+.admin-panel-warning {
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 0.8125rem;
+  color: #991b1b;
+  font-weight: 600;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 민원 관리 탭 내 전체삭제 버튼 */
+.admin-civil-bulk-del {
+  background: #c4161c;
+  color: #fff;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 4px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+.admin-civil-bulk-del:hover {
+  background: #991b1b;
+}

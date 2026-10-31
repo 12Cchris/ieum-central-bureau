@@ -57,6 +57,12 @@
         <button type="button" class="zoom-btn" id="btnZoomReset" aria-label="원래대로">초기화</button>
       </div>
 
+      <!-- 관리자 버튼 영역 -->
+      <div class="admin-area" id="adminArea">
+        <span class="admin-badge" id="adminBadge" style="display:none;">🔒 관리자 로그인됨</span>
+        <button type="button" class="admin-login-btn" id="btnAdminLogin" onclick="showAdminLoginModal()">🔐 관리자</button>
+      </div>
+
       <div class="gov-top-links">
         <button type="button" onclick="window.print()" title="화면 인쇄">인쇄</button>
         <a href="#faq">전자민원</a>

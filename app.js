@@ -1,6 +1,10 @@
 /* 기능: 화면 그리기·검색·모달·전자민원 등 모든 동작 (data.js 다음에 불러와야 함) */
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const ADMIN_PASSWORD = 'ieum2026!';
+const ADMIN_SESSION_KEY = 'ieumAdminSession';
+const ADMIN_BLOCK_KEY = 'ieumAgencyBlocks';
+const ADMIN_LOG_KEY = 'ieumAdminLog';
 
 /* 1. 공식 직인(관인) SVG 생성 함수 */
 const SEAL_GLYPHS = {
@@ -44,26 +48,34 @@ $('sealFoot').innerHTML = makeGovSeal(58);
 function renderAgencies() {
   const container = $('agList');
   container.innerHTML = AGENCIES.map((a, i) => {
+    const blocked = isBlocked(a.name);
+    const cardCls = 'agency-gov-card' + (blocked ? ' agency-blocked' : '');
+    const statusBadge = blocked
+      ? `<span class="agency-blocked-badge">⛔ 접근 차단</span>`
+      : `<span class="agency-badge-status ${a.open ? 'active' : 'prep'}">${a.open ? '● 정상 운영' : '○ 개청 준비중'}</span>`;
+    let btnHtml;
+    if (blocked) {
+      btnHtml = `<button type="button" class="agency-btn blocked" onclick="showBlockedNotice('${esc(a.name)}')">⛔ 접근 차단됨</button>`;
+    } else if (a.url) {
+      btnHtml = `<a class="agency-btn" href="${esc(a.url)}" target="_blank" rel="noopener">
+          누리집 바로가기
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        </a>`;
+    } else {
+      btnHtml = `<span class="agency-btn disabled">개청 준비중</span>`;
+    }
     return `
-      <div class="agency-gov-card">
+      <div class="${cardCls}">
         <div class="agency-card-header">
           <span class="agency-no-code">${a.code}</span>
-          <span class="agency-badge-status ${a.open ? 'active' : 'prep'}">
-            ${a.open ? '● 정상 운영' : '○ 개청 준비중'}
-          </span>
+          ${statusBadge}
         </div>
         <h3>${esc(a.name)}</h3>
         <div class="agency-en">${esc(a.en)}</div>
         <p class="agency-desc">${esc(a.desc)}</p>
         <div class="agency-btn-row">
-          <span style="font-size:0.75rem;color:#64748b;">${a.open ? '온라인 서비스 가동중' : '시스템 개발 중'}</span>
-          ${a.url 
-            ? `<a class="agency-btn" href="${esc(a.url)}" target="_blank" rel="noopener">
-                누리집 바로가기
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-               </a>` 
-            : `<span class="agency-btn disabled">개청 준비중</span>`
-          }
+          <span style="font-size:0.75rem;color:#64748b;">${blocked ? '⚠ 누리집 접근 차단 중' : (a.open ? '온라인 서비스 가동중' : '시스템 개발 중')}</span>
+          ${btnHtml}
         </div>
       </div>
     `;
@@ -687,14 +699,18 @@ try {
 function renderBanners() {
   const cls = ['bg-gift', 'bg-rps', 'bg-award', 'bg-conscience'];
   $('bannerZone').innerHTML = AGENCIES.map((a, i) => {
+    const blocked = isBlocked(a.name);
     const inner = `
       <div>
-        <span class="b-tag">${a.open ? '산하 정식 기관' : '산하 신설 기관 · 준비중'}</span>
+        <span class="b-tag">${blocked ? '⛔ 접근 차단' : (a.open ? '산하 정식 기관' : '산하 신설 기관 · 준비중')}</span>
         <h4>${esc(a.name)}</h4>
         <p>${esc(a.desc)}</p>
       </div>
-      <span class="b-link">${a.open ? '공식 누리집 방문 ›' : '개청 준비중'}</span>`;
-    const c = 'banner-card ' + (cls[i] || 'bg-award');
+      <span class="b-link">${blocked ? '접근 차단됨' : (a.open ? '공식 누리집 방문 ›' : '개청 준비중')}</span>`;
+    const c = 'banner-card ' + (cls[i] || 'bg-award') + (blocked ? ' banner-blocked' : '');
+    if (blocked) {
+      return `<div class="${c}" onclick="showBlockedNotice('${esc(a.name)}')" style="cursor:pointer;">${inner}</div>`;
+    }
     return a.open && a.url
       ? `<a href="${esc(a.url)}" target="_blank" rel="noopener" class="${c}">${inner}</a>`
       : `<div class="${c}">${inner}</div>`;
@@ -734,3 +750,88 @@ $('modalBody').addEventListener('click', e => {
     if (deleteCivil(act.dataset.no)) { toast('민원이 삭제되었습니다.'); renderCivilLookup(($('civilLookupNo').value || '').trim()); }
   });
 });
+
+/* ===== 관리자 접근 차단·민원 관리 (이 브라우저에 저장되는 체험 기능) ===== */
+const isAdmin = () => sessionStorage.getItem(ADMIN_SESSION_KEY) === '1';
+function readAdminStore(key, fallback) {
+  try { const v = JSON.parse(localStorage.getItem(key)); return v == null ? fallback : v; }
+  catch (err) { return fallback; }
+}
+function blockedAgencies() { return readAdminStore(ADMIN_BLOCK_KEY, {}); }
+function isBlocked(name) { return Boolean(blockedAgencies()[name]?.blocked); }
+function showBlockedNotice(name) {
+  const a = AGENCIES.find(x => x.name === name);
+  const record = blockedAgencies()[name] || {};
+  const reason = record.reason || '관리국의 운영 방침에 따라 해당 누리집의 접근이 일시적으로 제한되었습니다.';
+  const html = `<article class="block-notice-card"><header class="block-notice-header"><span class="block-notice-badge">접근 제한 안내</span><h3 class="block-notice-title">누리집 접근이 차단되었습니다</h3><div class="block-notice-sub">이음중앙관리국 통합 누리집 관리 시스템</div></header><div class="block-notice-body"><p>요청하신 산하 기관 누리집은 현재 관리국의 조치로 접근이 제한되어 있습니다.</p><table><tr><th>대상 기관</th><td>${esc(name)}</td></tr><tr><th>차단 사유</th><td>${esc(reason)}</td></tr><tr><th>조치 상태</th><td>접근 제한 중</td></tr></table><p style="margin-top:14px">자세한 사항은 이음중앙관리국 전자민원 창구를 이용해 주시기 바랍니다.</p></div><footer class="block-notice-footer"><span class="note">본 안내는 가상 누리집의 체험용 안내입니다.</span><span class="sign">이음중앙관리국장</span></footer></article>`;
+  openCustomModal('공식 누리집 접근 차단 안내', html);
+}
+function showAdminLoginModal() {
+  if (isAdmin()) { showAdminPanel(); return; }
+  openCustomModal('관리자 로그인', `<form id="adminLoginForm" class="admin-login-form"><label for="adminPassword">관리자 비밀번호</label><input id="adminPassword" type="password" autocomplete="current-password" required><button class="admin-login-submit" type="submit">로그인</button><div id="adminLoginError" class="admin-login-error" role="alert">비밀번호가 올바르지 않습니다.</div><p class="adm-note">로그인 상태는 이 브라우저 탭의 세션 동안 유지됩니다.</p></form>`);
+  $('adminPassword').focus();
+}
+function syncAdminUi() {
+  const logged = isAdmin();
+  $('adminBadge').style.display = logged ? '' : 'none';
+  const btn = $('btnAdminLogin');
+  btn.textContent = logged ? '⚙ 관리자 패널' : '🔐 관리자';
+  btn.classList.toggle('logged-in', logged);
+  renderAgencies();
+  renderBanners();
+}
+function addAdminLog(action, name, reason = '') {
+  const list = readAdminStore(ADMIN_LOG_KEY, []);
+  list.unshift({ ts: Date.now(), action, name, reason });
+  try { localStorage.setItem(ADMIN_LOG_KEY, JSON.stringify(list.slice(0, 100))); } catch (err) {}
+}
+function showAdminPanel() {
+  if (!isAdmin()) return showAdminLoginModal();
+  const blocks = blockedAgencies();
+  const rows = AGENCIES.map((a, i) => {
+    const b = blocks[a.name] || {};
+    return `<div class="admin-agency-row ${b.blocked ? 'is-blocked' : ''}"><div><div class="admin-agency-name">${esc(a.name)}</div><div class="admin-agency-code">${esc(a.code)} · ${b.blocked ? '차단 중' : '정상'}</div></div><input class="admin-reason-input" data-reason="${i}" aria-label="${esc(a.name)} 차단 사유" placeholder="차단 사유 (선택)" value="${esc(b.reason || '')}"><label class="toggle-switch"><input type="checkbox" data-block="${i}" ${b.blocked ? 'checked' : ''} aria-label="${esc(a.name)} 접근 차단"><span class="toggle-track blocked-mode"></span><span class="toggle-label">차단</span></label></div>`;
+  }).join('');
+  const logs = readAdminStore(ADMIN_LOG_KEY, []);
+  const logHtml = logs.length ? `<div style="overflow-x:auto"><table class="admin-log-table"><thead><tr><th>시각</th><th>조치</th><th>기관</th><th>사유</th></tr></thead><tbody>${logs.slice(0,30).map(x => `<tr><td>${esc(fmtTs(x.ts))}</td><td class="${x.action === '차단' ? 'log-action-block' : 'log-action-unblock'}">${esc(x.action)}</td><td>${esc(x.name)}</td><td>${esc(x.reason || '-')}</td></tr>`).join('')}</tbody></table></div>` : '<div class="admin-log-empty">기록된 관리 로그가 없습니다.</div>';
+  const civils = loadCivil();
+  const civilHtml = civils.length ? `<button type="button" class="admin-civil-bulk-del" data-admin-act="delete-all-civil">민원 전체 삭제</button>${civils.map(c => `<article class="admin-civil-item"><b>${esc(c.no)}</b> · ${esc(c.date)} · ${esc(c.target)}<br><strong>${esc(c.title)}</strong><p>${esc(c.content)}</p><label>처리 상태 <select data-civil-status="${esc(c.no)}">${CIVIL_STATUS.map(s => `<option ${civilStatusOf(c) === s ? 'selected' : ''}>${s}</option>`).join('')}</select></label><div class="admin-civil-actions"><button type="button" class="btn-danger" data-admin-act="delete-civil" data-no="${esc(c.no)}">삭제</button></div></article>`).join('')}` : '<div class="admin-log-empty">접수된 민원이 없습니다.</div>';
+  openCustomModal('관리자 패널', `<div class="admin-panel-warning">⚠ 설정과 로그, 민원은 이 브라우저에만 저장됩니다. 정적 사이트의 관리자 비밀번호는 소스 코드에서 확인할 수 있습니다.</div><section class="admin-panel-section"><h4>🏛️ 산하 기관 접근 차단</h4><div class="admin-bulk-btns"><button type="button" class="admin-bulk-btn block-all" data-admin-act="block-all">전체 차단</button><button type="button" class="admin-bulk-btn unblock-all" data-admin-act="unblock-all">전체 해제</button></div><div id="adminAgencyRows">${rows}</div></section><section class="admin-panel-section"><h4>📋 전자민원 관리 (${civils.length}건)</h4><div id="adminCivils">${civilHtml}</div></section><section class="admin-panel-section"><h4>🧾 관리자 조치 로그</h4>${logHtml}</section><button type="button" class="admin-logout-btn" data-admin-act="logout">로그아웃</button>`);
+}
+$('modalBody').addEventListener('submit', e => {
+  if (e.target.id !== 'adminLoginForm') return;
+  e.preventDefault();
+  if ($('adminPassword').value === ADMIN_PASSWORD) {
+    sessionStorage.setItem(ADMIN_SESSION_KEY, '1'); syncAdminUi(); showAdminPanel();
+  } else { $('adminLoginError').classList.add('show'); $('adminPassword').select(); }
+});
+$('modalBody').addEventListener('change', e => {
+  if (e.target.matches('[data-block]')) {
+    if (!isAdmin()) return;
+    const i = Number(e.target.dataset.block), a = AGENCIES[i];
+    const blocks = blockedAgencies(), blocked = e.target.checked;
+    const reason = $('modalBody').querySelector(`[data-reason="${i}"]`).value.trim();
+    blocks[a.name] = { blocked, reason };
+    localStorage.setItem(ADMIN_BLOCK_KEY, JSON.stringify(blocks));
+    addAdminLog(blocked ? '차단' : '해제', a.name, reason);
+    syncAdminUi(); showAdminPanel();
+  } else if (e.target.matches('[data-civil-status]')) {
+    const list = loadCivil(), c = list.find(x => x.no === e.target.dataset.civilStatus);
+    if (c) { c.status = e.target.value; saveCivil(list); toast('민원 처리 상태가 변경되었습니다.'); }
+  }
+});
+$('modalBody').addEventListener('click', e => {
+  const b = e.target.closest('[data-admin-act]'); if (!b || !isAdmin()) return;
+  const act = b.dataset.adminAct;
+  if (act === 'logout') { sessionStorage.removeItem(ADMIN_SESSION_KEY); syncAdminUi(); closeModal(); toast('로그아웃되었습니다.'); }
+  else if (act === 'block-all' || act === 'unblock-all') {
+    const blocked = act === 'block-all', blocks = blockedAgencies();
+    AGENCIES.forEach(a => { blocks[a.name] = { ...(blocks[a.name] || {}), blocked }; addAdminLog(blocked ? '차단' : '해제', a.name, blocks[a.name].reason || '일괄 처리'); });
+    localStorage.setItem(ADMIN_BLOCK_KEY, JSON.stringify(blocks)); syncAdminUi(); showAdminPanel();
+  } else if (act === 'delete-civil') {
+    confirmTwice(b, () => { deleteCivil(b.dataset.no); showAdminPanel(); });
+  } else if (act === 'delete-all-civil') {
+    confirmTwice(b, () => { saveCivil([]); showAdminPanel(); });
+  }
+});
+syncAdminUi();
