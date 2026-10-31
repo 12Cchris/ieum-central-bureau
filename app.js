@@ -1,7 +1,7 @@
 /* 기능: 화면 그리기·검색·모달·전자민원 등 모든 동작 (data.js 다음에 불러와야 함) */
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const ADMIN_PASSWORD = 'ieum2026!';
+const ADMIN_PASSWORD_SHA256 = '4a65d874a5cbe25286e5d5d6db3ce24fc06c9d99eef619718fe839941cecc39c';
 const ADMIN_SESSION_KEY = 'ieumAdminSession';
 const ADMIN_BLOCK_KEY = 'ieumAgencyBlocks';
 const ADMIN_LOG_KEY = 'ieumAdminLog';
@@ -775,7 +775,7 @@ function syncAdminUi() {
   const logged = isAdmin();
   $('adminBadge').style.display = logged ? '' : 'none';
   const btn = $('btnAdminLogin');
-  btn.textContent = logged ? '⚙ 관리자 패널' : '🔐 관리자';
+  btn.textContent = logged ? '⚙ 관리자 패널' : '관리자';
   btn.classList.toggle('logged-in', logged);
   renderAgencies();
   renderBanners();
@@ -796,14 +796,20 @@ function showAdminPanel() {
   const logHtml = logs.length ? `<div style="overflow-x:auto"><table class="admin-log-table"><thead><tr><th>시각</th><th>조치</th><th>기관</th><th>사유</th></tr></thead><tbody>${logs.slice(0,30).map(x => `<tr><td>${esc(fmtTs(x.ts))}</td><td class="${x.action === '차단' ? 'log-action-block' : 'log-action-unblock'}">${esc(x.action)}</td><td>${esc(x.name)}</td><td>${esc(x.reason || '-')}</td></tr>`).join('')}</tbody></table></div>` : '<div class="admin-log-empty">기록된 관리 로그가 없습니다.</div>';
   const civils = loadCivil();
   const civilHtml = civils.length ? `<button type="button" class="admin-civil-bulk-del" data-admin-act="delete-all-civil">민원 전체 삭제</button>${civils.map(c => `<article class="admin-civil-item"><b>${esc(c.no)}</b> · ${esc(c.date)} · ${esc(c.target)}<br><strong>${esc(c.title)}</strong><p>${esc(c.content)}</p><label>처리 상태 <select data-civil-status="${esc(c.no)}">${CIVIL_STATUS.map(s => `<option ${civilStatusOf(c) === s ? 'selected' : ''}>${s}</option>`).join('')}</select></label><div class="admin-civil-actions"><button type="button" class="btn-danger" data-admin-act="delete-civil" data-no="${esc(c.no)}">삭제</button></div></article>`).join('')}` : '<div class="admin-log-empty">접수된 민원이 없습니다.</div>';
-  openCustomModal('관리자 패널', `<div class="admin-panel-warning">⚠ 설정과 로그, 민원은 이 브라우저에만 저장됩니다. 정적 사이트의 관리자 비밀번호는 소스 코드에서 확인할 수 있습니다.</div><section class="admin-panel-section"><h4>🏛️ 산하 기관 접근 차단</h4><div class="admin-bulk-btns"><button type="button" class="admin-bulk-btn block-all" data-admin-act="block-all">전체 차단</button><button type="button" class="admin-bulk-btn unblock-all" data-admin-act="unblock-all">전체 해제</button></div><div id="adminAgencyRows">${rows}</div></section><section class="admin-panel-section"><h4>📋 전자민원 관리 (${civils.length}건)</h4><div id="adminCivils">${civilHtml}</div></section><section class="admin-panel-section"><h4>🧾 관리자 조치 로그</h4>${logHtml}</section><button type="button" class="admin-logout-btn" data-admin-act="logout">로그아웃</button>`);
+  openCustomModal('관리자 패널', `<div class="admin-panel-warning">⚠ 설정과 로그, 민원은 이 브라우저에만 저장됩니다. 비밀번호는 SHA-256 해시로 비교하지만, 정적 사이트만으로는 서버 수준의 인증을 제공할 수 없습니다.</div><section class="admin-panel-section"><h4>🏛️ 산하 기관 접근 차단</h4><div class="admin-bulk-btns"><button type="button" class="admin-bulk-btn block-all" data-admin-act="block-all">전체 차단</button><button type="button" class="admin-bulk-btn unblock-all" data-admin-act="unblock-all">전체 해제</button></div><div id="adminAgencyRows">${rows}</div></section><section class="admin-panel-section"><h4>📋 전자민원 관리 (${civils.length}건)</h4><div id="adminCivils">${civilHtml}</div></section><section class="admin-panel-section"><h4>🧾 관리자 조치 로그</h4>${logHtml}</section><button type="button" class="admin-logout-btn" data-admin-act="logout">로그아웃</button>`);
 }
 $('modalBody').addEventListener('submit', e => {
   if (e.target.id !== 'adminLoginForm') return;
   e.preventDefault();
-  if ($('adminPassword').value === ADMIN_PASSWORD) {
-    sessionStorage.setItem(ADMIN_SESSION_KEY, '1'); syncAdminUi(); showAdminPanel();
-  } else { $('adminLoginError').classList.add('show'); $('adminPassword').select(); }
+  const form = e.target;
+  crypto.subtle.digest('SHA-256', new TextEncoder().encode($('adminPassword').value))
+    .then(hash => {
+      const hex = [...new Uint8Array(hash)].map(b => b.toString(16).padStart(2, '0')).join('');
+      if (hex === ADMIN_PASSWORD_SHA256) {
+        sessionStorage.setItem(ADMIN_SESSION_KEY, '1'); syncAdminUi(); showAdminPanel();
+      } else { $('adminLoginError').classList.add('show'); $('adminPassword').select(); }
+    })
+    .catch(() => { const error = $('adminLoginError'); error.textContent = '이 브라우저에서는 암호화 기능을 사용할 수 없습니다.'; error.classList.add('show'); });
 });
 $('modalBody').addEventListener('change', e => {
   if (e.target.matches('[data-block]')) {
